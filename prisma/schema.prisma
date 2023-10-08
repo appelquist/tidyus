@@ -11,11 +11,37 @@ generator client {
     provider = "prisma-client-js"
 }
 
-model Post {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    content   String   @db.VarChar(255)
-    authorId  String
+model Chore {
+    id             String          @id @default(cuid())
+    createdAt      DateTime        @default(now())
+    title          String          @db.VarChar(100)
+    interval       Int
+    choreCompletes ChoreComplete[]
+}
 
-    @@index([authorId])
+model ChoreComplete {
+    id                    String                  @id @default(cuid())
+    completedAt           DateTime                @default(now())
+    choreId               String
+    chore                 Chore                   @relation(fields: [choreId], references: [id])
+    ChoresCompletedByUser ChoresCompletedByUser[]
+
+    @@index([choreId])
+}
+
+model ChoresCompletedByUser {
+    id              String        @id @default(cuid())
+    userId          String
+    user            User          @relation(fields: [userId], references: [id])
+    choreCompleteId String
+    choreComplete   ChoreComplete @relation(fields: [choreCompleteId], references: [id])
+
+    @@index([userId])
+    @@index([choreCompleteId])
+}
+
+model User {
+    id                    String                  @id @default(cuid())
+    userName              String                  @db.VarChar(100)
+    ChoresCompletedByUser ChoresCompletedByUser[]
 }

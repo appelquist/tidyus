@@ -5,8 +5,8 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 
-export const postsRouter = createTRPCRouter({
+export const choresRouter = createTRPCRouter({
   getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.post.findMany();
+    return ctx.prisma.chore.findMany();
   }),
 });

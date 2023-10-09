@@ -1,11 +1,14 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import { type Chore } from "@prisma/client";
 import Head from "next/head";
 
-import { api } from "~/utils/api";
+import { RouterOutputs, api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
-  const { data } = api.chores.getAll.useQuery();
+  const { data, isLoading } = api.chores.getAll.useQuery();
+  if (isLoading) return <div>Loading...</div>;
+  if (!data) return <div>Something went wrong</div>;
   return (
     <>
       <Head>
@@ -14,16 +17,56 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen justify-center">
-        <div className="h-full w-full border-x md:max-w-2xl">
-          <div>
+        <div className="h-full w-full border-x md:max-w-7xl">
+          <div className="flex justify-end border-b border-slate-500 p-2">
             {!user.isSignedIn && <SignInButton />}
             {!!user.isSignedIn && <SignOutButton />}
           </div>
-          <div>
-            {data?.map((chore) => <div key={chore.id}>{chore.title}</div>)}
+          <CreateChoreWizard />
+          <div className="grid grid-flow-row grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-4">
+            {[...data, ...data, ...data, ...data].map((chore) => (
+              <ChoreCard key={chore.chore.id} {...chore} />
+            ))}
           </div>
         </div>
       </main>
     </>
   );
 }
+
+type ChoreWithUser = RouterOutputs["chores"]["getAll"][number];
+
+const ChoreCard = (props: ChoreWithUser) => {
+  const { title, interval, createdAt } = props.chore;
+  const { username, profileImageUrl } = props.createdBy;
+  return (
+    <div className="rounded-md border bg-zinc-100">
+      <h1>{title}</h1>
+      <h3>Should be done every: {interval} days</h3>
+      <h3>
+        Created: {createdAt.toDateString()} by {username}
+        <img
+          src={profileImageUrl}
+          alt="Profile image"
+          className="h-6 w-6 rounded-full"
+        ></img>
+      </h3>
+    </div>
+  );
+};
+
+const CreateChoreWizard = () => {
+  const { user } = useUser();
+  if (!user) return null;
+  return (
+    <div className="flex w-full gap-3 border p-2">
+      <img
+        src={user.imageUrl}
+        alt="Profile image"
+        className="h-12 w-12 rounded-full"
+      />
+      <input placeholder="Title!" className="bg-transparent outline-none" />
+      <input placeholder="Interval" className="bg-transparent outline-none" />
+    </div>
+  );
+};

@@ -16,7 +16,10 @@ model Chore {
     createdAt      DateTime        @default(now())
     title          String          @db.VarChar(100)
     interval       Int
+    createdBy      String
     choreCompletes ChoreComplete[]
+
+    @@index([createdBy])
 }
 
 model ChoreComplete {
@@ -32,16 +35,9 @@ model ChoreComplete {
 model ChoresCompletedByUser {
     id              String        @id @default(cuid())
     userId          String
-    user            User          @relation(fields: [userId], references: [id])
     choreCompleteId String
     choreComplete   ChoreComplete @relation(fields: [choreCompleteId], references: [id])
 
     @@index([userId])
     @@index([choreCompleteId])
-}
-
-model User {
-    id                    String                  @id @default(cuid())
-    userName              String                  @db.VarChar(100)
-    ChoresCompletedByUser ChoresCompletedByUser[]
 }

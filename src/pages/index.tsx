@@ -40,16 +40,18 @@ const ChoreCard = (props: ChoreWithUser) => {
   const { title, interval, createdAt } = props.chore;
   const { username, profileImageUrl } = props.createdBy;
   return (
-    <div className="rounded-md border bg-zinc-100">
+    <div className="rounded-md border bg-zinc-100 p-2">
       <h1>{title}</h1>
       <h3>Should be done every: {interval} days</h3>
       <h3>
-        Created: {createdAt.toDateString()} by {username}
-        <img
-          src={profileImageUrl}
-          alt="Profile image"
-          className="h-6 w-6 rounded-full"
-        ></img>
+        Created: {createdAt.toDateString()} by <span>{username}</span>
+        <span>
+          <img
+            src={profileImageUrl}
+            alt="Profile image"
+            className="h-6 w-6 rounded-full"
+          ></img>
+        </span>
       </h3>
     </div>
   );

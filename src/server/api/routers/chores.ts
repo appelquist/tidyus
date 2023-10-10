@@ -32,4 +32,22 @@ export const choresRouter = createTRPCRouter({
         }
     })
   }),
+  getChoresWithLatestComplete: publicProcedure.query(async ({ctx}) => {
+    const choresWithLatestComplete = await ctx.prisma.chore.findMany({include: {
+        choreCompletes: true,
+    },});
+    const users = (await clerkClient.users.getUserList({
+        userId: choresWithLatestComplete.map((chore) => chore.createdBy),
+        limit: 100,
+    })).map(filterUserForClient);
+
+    return choresWithLatestComplete.map((chore) => {
+        const user = users.find((user) => user.id === chore.createdBy)
+        if (!user) throw new TRPCError({code: "INTERNAL_SERVER_ERROR", message: "User for chore not found"});
+        return {
+            chore,
+            createdBy: user
+        }
+    })
+  })
 });

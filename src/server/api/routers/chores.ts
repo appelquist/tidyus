@@ -41,7 +41,32 @@ export const choresRouter = createTRPCRouter({
         limit: 100,
     })).map(filterUserForClient);
 
-    return choresWithLatestComplete.map((chore) => {
+   const choresWithSortedChoreCompletes = choresWithLatestComplete.map(chore => {
+    chore.choreCompletes.sort((a,b) => {
+        return b.completedAt.getTime() - a.completedAt.getTime();
+    })
+    return chore;
+   })
+    const choresWithStatus = choresWithSortedChoreCompletes.map(chore => {
+        const latestChoreComplete = chore.choreCompletes[0]?.completedAt.getTime();
+        if (!latestChoreComplete) {
+            const deadline = chore.createdAt.getTime() + (chore.interval * 86400000);
+            if (Date.now() > deadline) {
+                return {
+                    ...chore, isCompletedWithinInterval: false
+                }
+            }
+            return {...chore, isCompletedWithinInterval: true}
+        }
+        const deadline = latestChoreComplete + (chore.interval * 86400000);
+        if (Date.now() > deadline) {
+            return {
+                ...chore, isCompletedWithinInterval: false
+            }
+        }
+        return {...chore, isCompletedWithinInterval: true}
+    });
+    return choresWithStatus.map((chore) => {
         const user = users.find((user) => user.id === chore.createdBy)
         if (!user) throw new TRPCError({code: "INTERNAL_SERVER_ERROR", message: "User for chore not found"});
         return {

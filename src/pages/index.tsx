@@ -6,7 +6,7 @@ import { RouterOutputs, api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
-  const { data, isLoading } = api.chores.getAll.useQuery();
+  const { data, isLoading } = api.chores.getChoresWithLatestComplete.useQuery();
   if (isLoading) return <div>Loading...</div>;
   if (!data) return <div>Something went wrong</div>;
   return (
@@ -34,13 +34,18 @@ export default function Home() {
   );
 }
 
-type ChoreWithUser = RouterOutputs["chores"]["getAll"][number];
+type ChoreWithUser =
+  RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
 const ChoreCard = (props: ChoreWithUser) => {
-  const { title, interval, createdAt } = props.chore;
+  const { title, interval, createdAt, isCompletedWithinInterval } = props.chore;
   const { username, profileImageUrl } = props.createdBy;
   return (
-    <div className="rounded-md border bg-zinc-100 p-2">
+    <div
+      className={`rounded-md border ${
+        isCompletedWithinInterval ? "bg-lime-400" : "bg-red-400"
+      } p-2`}
+    >
       <h1>{title}</h1>
       <h3>Should be done every: {interval} days</h3>
       <h3>

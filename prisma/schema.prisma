@@ -23,21 +23,12 @@ model Chore {
 }
 
 model ChoreComplete {
-    id                    String                  @id @default(cuid())
-    completedAt           DateTime                @default(now())
-    choreId               String
-    chore                 Chore                   @relation(fields: [choreId], references: [id])
-    ChoresCompletedByUser ChoresCompletedByUser[]
+    id          String   @id @default(cuid())
+    completedAt DateTime @default(now())
+    completedBy String
+    choreId     String
+    chore       Chore    @relation(fields: [choreId], references: [id])
 
     @@index([choreId])
-}
-
-model ChoresCompletedByUser {
-    id              String        @id @default(cuid())
-    userId          String
-    choreCompleteId String
-    choreComplete   ChoreComplete @relation(fields: [choreCompleteId], references: [id])
-
-    @@index([userId])
-    @@index([choreCompleteId])
+    @@index([completedBy])
 }

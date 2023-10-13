@@ -1,5 +1,5 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import { type Chore } from "@prisma/client";
+import { ChoreComplete, type Chore } from "@prisma/client";
 import Head from "next/head";
 
 import { RouterOutputs, api } from "~/utils/api";
@@ -24,7 +24,7 @@ export default function Home() {
           </div>
           <CreateChoreWizard />
           <div className="grid grid-flow-row grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-4">
-            {[...data, ...data, ...data, ...data].map((chore) => (
+            {data.map((chore) => (
               <ChoreCard key={chore.chore.id} {...chore} />
             ))}
           </div>
@@ -38,7 +38,13 @@ type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
 const ChoreCard = (props: ChoreWithUser) => {
-  const { title, interval, createdAt, isCompletedWithinInterval } = props.chore;
+  const {
+    title,
+    interval,
+    createdAt,
+    isCompletedWithinInterval,
+    choreCompletes,
+  } = props.chore;
   const { username, profileImageUrl } = props.createdBy;
   return (
     <div
@@ -46,9 +52,9 @@ const ChoreCard = (props: ChoreWithUser) => {
         isCompletedWithinInterval ? "bg-lime-400" : "bg-red-400"
       } p-2`}
     >
-      <h1>{title}</h1>
+      <h1 className="">{title}</h1>
       <h3>Should be done every: {interval} days</h3>
-      <h3>
+      {/* <h3>
         Created: {createdAt.toDateString()} by <span>{username}</span>
         <span>
           <img
@@ -57,7 +63,10 @@ const ChoreCard = (props: ChoreWithUser) => {
             className="h-6 w-6 rounded-full"
           ></img>
         </span>
-      </h3>
+      </h3> */}
+      <CompleteStatusesView
+        statuses={completeStatuses(choreCompletes, interval * 86400000, [], 5)}
+      />
     </div>
   );
 };
@@ -77,3 +86,68 @@ const CreateChoreWizard = () => {
     </div>
   );
 };
+
+const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
+  const completeStatuses = statuses.map((status, i) => {
+    let color;
+    if (status === CompleteStatus.CompletedInTime) {
+      color = "bg-lime-200";
+    } else if (status === CompleteStatus.NotCompletedInTime) {
+      color = "bg-red-200";
+    } else {
+      color = "bg-slate-700";
+    }
+
+    return <div key={i} className={`h-6 w-6 rounded-full ${color}`}></div>;
+  });
+  return <div className="flex w-2/3 justify-evenly">{completeStatuses}</div>;
+};
+
+const completeStatuses = (
+  choreCompletes: ChoreComplete[],
+  deadline: number,
+  result: CompleteStatus[],
+  numberOfStatuses: number,
+): CompleteStatus[] => {
+  if (numberOfStatuses === 0) {
+    return result;
+  }
+  if (!choreCompletes[0] || !choreCompletes) {
+    const [first, ...rest] = choreCompletes;
+    const nextDeadline = deadline * 2;
+    const nextResult = [...result, CompleteStatus.NoEntryForDeadLine];
+    return completeStatuses(
+      rest,
+      nextDeadline,
+      nextResult,
+      numberOfStatuses - 1,
+    ).reverse();
+  }
+  const [first, ...rest] = choreCompletes;
+  const choreCompletedAt = first.completedAt.getTime();
+
+  if (choreCompletedAt > deadline) {
+    const nextDeadline = choreCompletedAt - deadline * 86400000;
+    const nextResult = [...result, CompleteStatus.CompletedInTime];
+    return completeStatuses(
+      rest,
+      nextDeadline,
+      nextResult,
+      numberOfStatuses - 1,
+    ).reverse();
+  }
+  const nextDeadline = deadline * 2;
+  const nextResult = [...result, CompleteStatus.NotCompletedInTime];
+  return completeStatuses(
+    rest,
+    nextDeadline,
+    nextResult,
+    numberOfStatuses - 1,
+  ).reverse();
+};
+
+enum CompleteStatus {
+  CompletedInTime = "completedInTime",
+  NotCompletedInTime = "notCompletedInTime",
+  NoEntryForDeadLine = "noEntryForDeadline",
+}

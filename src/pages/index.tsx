@@ -43,7 +43,7 @@ const ChoreCard = (props: ChoreWithUser) => {
   const statuses = completeStatuses(interval, choreCompletes.slice(0, 5));
   return (
     <div
-      className={`flex h-36 w-72 flex-col justify-between rounded-md border p-2 shadow-md ${
+      className={`flex h-36 w-72 cursor-pointer flex-col justify-between rounded-md border p-2 shadow-md hover:shadow-lg ${
         isCompletedWithinInterval
           ? "border-lime-400 bg-lime-50"
           : "border-red-300 bg-red-50"

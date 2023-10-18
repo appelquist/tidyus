@@ -1,8 +1,8 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import { ChoreComplete, type Chore } from "@prisma/client";
+import { type ChoreComplete } from "@prisma/client";
 import Head from "next/head";
 
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
@@ -40,6 +40,7 @@ type ChoreWithUser =
 const ChoreCard = (props: ChoreWithUser) => {
   const { title, interval, isCompletedWithinInterval, choreCompletes } =
     props.chore;
+  const statuses = completeStatuses(interval, choreCompletes.slice(0, 5));
   return (
     <div
       className={`flex h-36 max-w-sm flex-col justify-between rounded-md border p-2 shadow-md ${
@@ -55,9 +56,7 @@ const ChoreCard = (props: ChoreWithUser) => {
           <span className="font-semibold">{interval} days</span>
         </h3>
       </div>
-      <CompleteStatusesView
-        statuses={completeStatuses(interval, choreCompletes)}
-      />
+      <CompleteStatusesView statuses={statuses} />
     </div>
   );
 };
@@ -102,9 +101,6 @@ const completeStatuses = (
 ) => {
   return choreCompletes
     .map((choreComplete, i, completes) => {
-      if (i === 5) {
-        return;
-      }
       const previousComplete = completes[i + 1];
       if (!previousComplete) {
         const intervalStart = Date.now() - interval * 86400000;

@@ -23,7 +23,7 @@ export default function Home() {
             {!!user.isSignedIn && <SignOutButton />}
           </div>
           <CreateChoreWizard />
-          <div className="grid grid-flow-row grid-cols-1 gap-4 p-2 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-flow-row grid-cols-1 gap-4 p-2 md:grid-cols-2 lg:grid-cols-4">
             {data.map((chore) => (
               <ChoreCard key={chore.chore.id} {...chore} />
             ))}
@@ -42,12 +42,19 @@ const ChoreCard = (props: ChoreWithUser) => {
     props.chore;
   return (
     <div
-      className={`rounded-md border ${
-        isCompletedWithinInterval ? "bg-lime-400" : "bg-red-400"
-      } p-2`}
+      className={`flex h-36 max-w-sm flex-col justify-between rounded-md border p-2 shadow-md ${
+        isCompletedWithinInterval
+          ? "border-lime-400 bg-lime-50"
+          : "border-red-300 bg-red-50"
+      }`}
     >
-      <h1 className="">{title}</h1>
-      <h3>Should be done every: {interval} days</h3>
+      <div>
+        <h1 className="text-lg font-semibold">{title}</h1>
+        <h3>
+          Should be done every:{" "}
+          <span className="font-semibold">{interval} days</span>
+        </h3>
+      </div>
       <CompleteStatusesView
         statuses={completeStatuses(interval, choreCompletes)}
       />
@@ -76,15 +83,17 @@ const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
     return (
       <div
         key={i}
-        className={`h-6 w-6 rounded-full ${
+        className={`mr-2 h-6 w-6 rounded-full border ${
           status === CompleteStatus.CompletedInTime
-            ? "bg-lime-200"
-            : "bg-red-200"
+            ? "border-lime-400 bg-lime-200"
+            : "border-red-300 bg-red-200"
         }`}
       ></div>
     );
   });
-  return <div className="flex w-2/3 justify-evenly">{completeStatuses}</div>;
+  return (
+    <div className="flex w-2/3 min-w-max justify-start">{completeStatuses}</div>
+  );
 };
 
 const completeStatuses = (
@@ -93,7 +102,9 @@ const completeStatuses = (
 ) => {
   return choreCompletes
     .map((choreComplete, i, completes) => {
-      console.log(choreCompletes);
+      if (i === 5) {
+        return;
+      }
       const previousComplete = completes[i + 1];
       if (!previousComplete) {
         const intervalStart = Date.now() - interval * 86400000;

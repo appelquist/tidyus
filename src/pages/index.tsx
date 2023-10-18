@@ -38,14 +38,8 @@ type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
 const ChoreCard = (props: ChoreWithUser) => {
-  const {
-    title,
-    interval,
-    createdAt,
-    isCompletedWithinInterval,
-    choreCompletes,
-  } = props.chore;
-  const { username, profileImageUrl } = props.createdBy;
+  const { title, interval, isCompletedWithinInterval, choreCompletes } =
+    props.chore;
   return (
     <div
       className={`rounded-md border ${
@@ -54,18 +48,8 @@ const ChoreCard = (props: ChoreWithUser) => {
     >
       <h1 className="">{title}</h1>
       <h3>Should be done every: {interval} days</h3>
-      {/* <h3>
-        Created: {createdAt.toDateString()} by <span>{username}</span>
-        <span>
-          <img
-            src={profileImageUrl}
-            alt="Profile image"
-            className="h-6 w-6 rounded-full"
-          ></img>
-        </span>
-      </h3> */}
       <CompleteStatusesView
-        statuses={completeStatuses(choreCompletes, interval * 86400000, [], 5)}
+        statuses={completeStatuses(interval, choreCompletes)}
       />
     </div>
   );
@@ -89,65 +73,46 @@ const CreateChoreWizard = () => {
 
 const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
   const completeStatuses = statuses.map((status, i) => {
-    let color;
-    if (status === CompleteStatus.CompletedInTime) {
-      color = "bg-lime-200";
-    } else if (status === CompleteStatus.NotCompletedInTime) {
-      color = "bg-red-200";
-    } else {
-      color = "bg-slate-700";
-    }
-
-    return <div key={i} className={`h-6 w-6 rounded-full ${color}`}></div>;
+    return (
+      <div
+        key={i}
+        className={`h-6 w-6 rounded-full ${
+          status === CompleteStatus.CompletedInTime
+            ? "bg-lime-200"
+            : "bg-red-200"
+        }`}
+      ></div>
+    );
   });
   return <div className="flex w-2/3 justify-evenly">{completeStatuses}</div>;
 };
 
 const completeStatuses = (
+  interval: number,
   choreCompletes: ChoreComplete[],
-  deadline: number,
-  result: CompleteStatus[],
-  numberOfStatuses: number,
-): CompleteStatus[] => {
-  if (numberOfStatuses === 0) {
-    return result;
-  }
-  if (!choreCompletes[0] || !choreCompletes) {
-    const [first, ...rest] = choreCompletes;
-    const nextDeadline = deadline * 2;
-    const nextResult = [...result, CompleteStatus.NoEntryForDeadLine];
-    return completeStatuses(
-      rest,
-      nextDeadline,
-      nextResult,
-      numberOfStatuses - 1,
-    ).reverse();
-  }
-  const [first, ...rest] = choreCompletes;
-  const choreCompletedAt = first.completedAt.getTime();
-
-  if (choreCompletedAt > deadline) {
-    const nextDeadline = choreCompletedAt - deadline * 86400000;
-    const nextResult = [...result, CompleteStatus.CompletedInTime];
-    return completeStatuses(
-      rest,
-      nextDeadline,
-      nextResult,
-      numberOfStatuses - 1,
-    ).reverse();
-  }
-  const nextDeadline = deadline * 2;
-  const nextResult = [...result, CompleteStatus.NotCompletedInTime];
-  return completeStatuses(
-    rest,
-    nextDeadline,
-    nextResult,
-    numberOfStatuses - 1,
-  ).reverse();
+) => {
+  return choreCompletes
+    .map((choreComplete, i, completes) => {
+      console.log(choreCompletes);
+      const previousComplete = completes[i + 1];
+      if (!previousComplete) {
+        const intervalStart = Date.now() - interval * 86400000;
+        if (choreComplete.completedAt.getTime() > intervalStart) {
+          return CompleteStatus.CompletedInTime;
+        }
+        return CompleteStatus.NotCompletedInTime;
+      }
+      const intervalStart =
+        previousComplete.completedAt.getTime() - interval * 86400000;
+      if (choreComplete.completedAt.getTime() > intervalStart) {
+        return CompleteStatus.CompletedInTime;
+      }
+      return CompleteStatus.NotCompletedInTime;
+    })
+    .reverse();
 };
 
 enum CompleteStatus {
   CompletedInTime = "completedInTime",
   NotCompletedInTime = "notCompletedInTime",
-  NoEntryForDeadLine = "noEntryForDeadline",
 }

@@ -1,5 +1,4 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import { type ChoreComplete } from "@prisma/client";
 import Head from "next/head";
 
 import { type RouterOutputs, api } from "~/utils/api";
@@ -22,10 +21,9 @@ export default function Home() {
             {!user.isSignedIn && <SignInButton />}
             {!!user.isSignedIn && <SignOutButton />}
           </div>
-          <CreateChoreWizard />
-          <div className="grid grid-flow-row grid-cols-1 justify-items-center gap-4 p-2 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-flow-row grid-cols-1 justify-items-center gap-4 p-2 md:grid-cols-3 lg:grid-cols-4">
             {data.map((chore) => (
-              <ChoreCard key={chore.chore.id} {...chore} />
+              <ChoreCard key={chore.id} {...chore} />
             ))}
           </div>
         </div>
@@ -37,16 +35,15 @@ export default function Home() {
 type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
+type CompleteStatus =
+  RouterOutputs["chores"]["getChoresWithLatestComplete"][number]["choreCompletes"][number];
+
 const ChoreCard = (props: ChoreWithUser) => {
-  const { title, interval, isCompletedWithinInterval, choreCompletes } =
-    props.chore;
-  const statuses = completeStatuses(interval, choreCompletes.slice(0, 5));
+  const { title, interval, choreCompletes, isOverdue } = props;
   return (
     <div
       className={`flex h-36 w-72 cursor-pointer flex-col justify-between rounded-md border p-2 shadow-md hover:shadow-lg ${
-        isCompletedWithinInterval
-          ? "border-lime-400 bg-lime-50"
-          : "border-red-300 bg-red-50"
+        isOverdue ? "border-red-300 bg-red-50" : "border-lime-400 bg-lime-50"
       }`}
     >
       <div>
@@ -56,23 +53,7 @@ const ChoreCard = (props: ChoreWithUser) => {
           <span className="font-semibold">{interval} days</span>
         </h3>
       </div>
-      <CompleteStatusesView statuses={statuses} />
-    </div>
-  );
-};
-
-const CreateChoreWizard = () => {
-  const { user } = useUser();
-  if (!user) return null;
-  return (
-    <div className="flex w-full gap-3 border p-2">
-      <img
-        src={user.imageUrl}
-        alt="Profile image"
-        className="h-12 w-12 rounded-full"
-      />
-      <input placeholder="Title!" className="bg-transparent outline-none" />
-      <input placeholder="Interval" className="bg-transparent outline-none" />
+      <CompleteStatusesView statuses={choreCompletes} />
     </div>
   );
 };
@@ -83,7 +64,7 @@ const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
       <div
         key={i}
         className={`mr-2 h-6 w-6 rounded-full border ${
-          status === CompleteStatus.CompletedInTime
+          status === "completedInTime"
             ? "border-lime-400 bg-lime-200"
             : "border-red-300 bg-red-200"
         }`}
@@ -95,31 +76,4 @@ const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
   );
 };
 
-const completeStatuses = (
-  interval: number,
-  choreCompletes: ChoreComplete[],
-) => {
-  return choreCompletes
-    .map((choreComplete, i, completes) => {
-      const previousComplete = completes[i + 1];
-      if (!previousComplete) {
-        const intervalStart = Date.now() - interval * 86400000;
-        if (choreComplete.completedAt.getTime() > intervalStart) {
-          return CompleteStatus.CompletedInTime;
-        }
-        return CompleteStatus.NotCompletedInTime;
-      }
-      const intervalStart =
-        previousComplete.completedAt.getTime() - interval * 86400000;
-      if (choreComplete.completedAt.getTime() > intervalStart) {
-        return CompleteStatus.CompletedInTime;
-      }
-      return CompleteStatus.NotCompletedInTime;
-    })
-    .reverse();
-};
-
-enum CompleteStatus {
-  CompletedInTime = "completedInTime",
-  NotCompletedInTime = "notCompletedInTime",
-}
+//

@@ -1,7 +1,9 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 
-import { type RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
+import { ChoreView } from "~/components/choreview";
+import { ChoreEditView } from "~/components/choreeditview";
 
 export default function Home() {
   const user = useUser();
@@ -23,7 +25,7 @@ export default function Home() {
           </div>
           <div className="grid grid-flow-row grid-cols-1 justify-items-center gap-4 p-2 md:grid-cols-3 lg:grid-cols-4">
             {data.map((chore) => (
-              <ChoreCard key={chore.id} {...chore} />
+              <ChoreView key={chore.id} {...chore} />
             ))}
           </div>
         </div>
@@ -31,49 +33,3 @@ export default function Home() {
     </>
   );
 }
-
-type ChoreWithUser =
-  RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
-
-type CompleteStatus =
-  RouterOutputs["chores"]["getChoresWithLatestComplete"][number]["choreCompletes"][number];
-
-const ChoreCard = (props: ChoreWithUser) => {
-  const { title, interval, choreCompletes, isOverdue } = props;
-  return (
-    <div
-      className={`flex h-36 w-72 cursor-pointer flex-col justify-between rounded-md border p-2 shadow-md hover:shadow-lg ${
-        isOverdue ? "border-red-300 bg-red-50" : "border-lime-400 bg-lime-50"
-      }`}
-    >
-      <div>
-        <h1 className="text-lg font-semibold">{title}</h1>
-        <h3>
-          Should be done every:{" "}
-          <span className="font-semibold">{interval} days</span>
-        </h3>
-      </div>
-      <CompleteStatusesView statuses={choreCompletes} />
-    </div>
-  );
-};
-
-const CompleteStatusesView = ({ statuses }: { statuses: CompleteStatus[] }) => {
-  const completeStatuses = statuses.map((status, i) => {
-    return (
-      <div
-        key={i}
-        className={`mr-2 h-6 w-6 rounded-full border ${
-          status === "completedInTime"
-            ? "border-lime-400 bg-lime-200"
-            : "border-red-300 bg-red-200"
-        }`}
-      ></div>
-    );
-  });
-  return (
-    <div className="flex w-2/3 min-w-max justify-start">{completeStatuses}</div>
-  );
-};
-
-//

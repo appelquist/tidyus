@@ -1,7 +1,8 @@
-import { RouterOutputs } from "~/utils/api";
+import { RouterOutputs, api } from "~/utils/api";
 import Image from "next/image";
 import checkSvg from "../../public/check.svg";
 import pencilSvg from "../../public/pencil.svg";
+import { LoadingSpinner } from "./loading";
 
 type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
@@ -12,10 +13,12 @@ type Props = {
 };
 export const ChoreEditView = ({ chore, toggleController }: Props) => {
   const { isOverdue, title, id } = chore;
+  const { mutate, isLoading } = api.chores.createChoreComplete.useMutation();
   const handleChoreComplete = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
     e.stopPropagation();
+    mutate({ choreId: id });
   };
   return (
     <div
@@ -30,11 +33,15 @@ export const ChoreEditView = ({ chore, toggleController }: Props) => {
           onClick={(e) => handleChoreComplete(e)}
           className="flex w-36 items-center justify-center"
         >
-          <Image
-            className="h-12 w-12"
-            src={checkSvg as string}
-            alt="Complete chore logo"
-          />
+          {isLoading ? (
+            <LoadingSpinner size={8} />
+          ) : (
+            <Image
+              className="h-12 w-12"
+              src={checkSvg as string}
+              alt="Complete chore logo"
+            />
+          )}
         </div>
         <div className="flex w-36 items-center justify-center">
           <Image

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   createTRPCRouter,
+  privateProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
 
@@ -40,27 +41,10 @@ const completeStatuses = (
 type CompleteStatus = "completedInTime" | "notCompletedInTime"
 
 export const choresRouter = createTRPCRouter({
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const chores = await ctx.prisma.chore.findMany({
-        take: 100,
-    });
-    
-    const users = (await clerkClient.users.getUserList({
-        userId: chores.map((chore) => chore.createdBy),
-        limit: 100,
-    })).map(filterUserForClient);
-
-    return chores.map((chore) => {
-        const user = users.find((user) => user.id === chore.createdBy)
-        if (!user) throw new TRPCError({code: "INTERNAL_SERVER_ERROR", message: "User for chore not found"});
-        return {
-            chore,
-            createdBy: user
-        }
-    })
-  }),
-  getChoresWithLatestComplete: publicProcedure.query(async ({ctx}) => {
-    const choresWithLatestComplete = await ctx.prisma.chore.findMany({include: {
+  getChoresWithLatestComplete: privateProcedure.query(async ({ctx}) => {
+    const choresWithLatestComplete = await ctx.prisma.chore.findMany({where:{
+      createdBy: ctx.userId
+    },include: {
         choreCompletes: true,
     },});
     const users = (await clerkClient.users.getUserList({
@@ -89,5 +73,17 @@ export const choresRouter = createTRPCRouter({
         const isOverdue = choreCompletes[choreCompletes.length - 1] === "notCompletedInTime" ? true : false
         return {...chore.chore, choreCompletes: choreCompletes, isOverdue: isOverdue}
    });
+  }),
+  createChoreComplete: privateProcedure.input(z.object({
+    choreId: z.string().min(1).max(255)
+  })).mutation(async ({ctx, input}) => {
+    const userId =  ctx.userId;
+    const choreComplete = ctx.prisma.choreComplete.create({
+      data: {
+        completedBy: userId,
+        choreId: input.choreId
+      }
+    })
+    return choreComplete;
   })
 });

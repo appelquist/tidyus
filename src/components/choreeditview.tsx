@@ -20,10 +20,18 @@ export const ChoreEditView = ({ chore, toggleController }: Props) => {
       }`}
     >
       <div className="flex w-36 items-center justify-center">
-        <Image className="h-12 w-12" src={checkSvg} alt="Complete chore logo" />
+        <Image
+          className="h-12 w-12"
+          src={checkSvg as string}
+          alt="Complete chore logo"
+        />
       </div>
       <div className="flex w-36 items-center justify-center">
-        <Image className="h-12 w-12" src={pencilSvg} alt="Edit chore logo" />
+        <Image
+          className="h-12 w-12"
+          src={pencilSvg as string}
+          alt="Edit chore logo"
+        />
       </div>
     </div>
   );

@@ -3,10 +3,10 @@ import Head from "next/head";
 
 import { api } from "~/utils/api";
 import { ChoreView } from "~/components/choreview";
-import { ChoreEditView } from "~/components/choreeditview";
+import { Header } from "~/components/header";
+import { Footer } from "~/components/footer";
 
 export default function Home() {
-  const user = useUser();
   const { data, isLoading } = api.chores.getChoresWithLatestComplete.useQuery();
   if (isLoading) return <div>Loading...</div>;
   if (!data) return <div>Something went wrong</div>;
@@ -19,15 +19,13 @@ export default function Home() {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full border-x md:max-w-7xl">
-          <div className="flex justify-end border-b border-slate-500 p-2">
-            {!user.isSignedIn && <SignInButton />}
-            {!!user.isSignedIn && <SignOutButton />}
-          </div>
+          <Header />
           <div className="grid grid-flow-row grid-cols-1 justify-items-center gap-4 p-2 md:grid-cols-3 lg:grid-cols-4">
             {data.map((chore) => (
               <ChoreView key={chore.id} {...chore} />
             ))}
           </div>
+          <Footer />
         </div>
       </main>
     </>

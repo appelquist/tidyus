@@ -5,10 +5,11 @@ import { api } from "~/utils/api";
 import { ChoreView } from "~/components/choreview";
 import { Header } from "~/components/header";
 import { Footer } from "~/components/footer";
+import { LoadingPage } from "~/components/loading";
 
 export default function Home() {
   const { data, isLoading } = api.chores.getChoresWithLatestComplete.useQuery();
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingPage />;
   if (!data) return <div>Something went wrong</div>;
   return (
     <>

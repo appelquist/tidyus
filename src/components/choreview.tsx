@@ -1,8 +1,9 @@
 import { RouterOutputs } from "~/utils/api";
+import Image from "next/image";
 import { CompleteStatusesView } from "./completestatusesview";
 import { useState } from "react";
 import { ChoreEditView } from "./choreeditview";
-
+import alarmClock from "../../public/alarm-clock.svg";
 type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
@@ -20,18 +21,21 @@ export const ChoreView = (props: ChoreWithUser) => {
   }
   return (
     <div
-      className={`flex h-36 w-72 cursor-pointer flex-col justify-between rounded-md border p-2 shadow-md hover:shadow-lg ${
+      className={`flex h-36 w-72 cursor-pointer flex-col justify-start gap-5 rounded-md border p-2 shadow-md hover:shadow-lg ${
         isOverdue ? "border-red-300 bg-red-50" : "border-lime-400 bg-lime-50"
       }`}
       onClick={(e) => toggleController(e)}
     >
-      <div>
-        <h1 className="text-lg font-semibold">{title}</h1>
-        <h3>
-          Should be done every:{" "}
-          <span className="font-semibold">{interval} days</span>
-        </h3>
+      <h1 className="text-lg font-semibold">{title}</h1>
+      <div className="flex w-36 items-center justify-start gap-1">
+        <Image
+          className="h-8 w-8"
+          src={alarmClock as string}
+          alt="Alarm clock"
+        />
+        <h3 className="font-semibold">Every {interval} days</h3>
       </div>
+
       <CompleteStatusesView statuses={choreCompletes} />
     </div>
   );

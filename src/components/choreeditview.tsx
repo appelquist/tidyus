@@ -23,7 +23,7 @@ export const ChoreEditView = ({ chore, toggleController }: Props) => {
   return (
     <div
       onClick={(e) => toggleController(e)}
-      className={`flex h-36 w-72 cursor-pointer flex-col rounded-md border p-2 shadow-md hover:shadow-lg ${
+      className={`flex h-36 w-72 cursor-pointer flex-col rounded-2xl border p-2 shadow-md hover:shadow-lg ${
         isOverdue ? "border-red-300 bg-red-50" : "border-lime-400 bg-lime-50"
       }`}
     >

@@ -85,5 +85,20 @@ export const choresRouter = createTRPCRouter({
       }
     })
     return choreComplete;
+  }),
+  createChore: privateProcedure.input(z.object({
+    title: z.string().min(1).max(25),
+    interval: z.number().min(1).max(1095),
+
+  })).mutation(async ({ctx, input}) => {
+    const userId =  ctx.userId;
+    const chore = ctx.prisma.chore.create({
+      data: {
+        title: input.title,
+        interval: input.interval,
+        createdBy: userId
+      }
+    })
+    return chore;
   })
 });

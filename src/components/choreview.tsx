@@ -21,7 +21,7 @@ export const ChoreView = (props: ChoreWithUser) => {
   }
   return (
     <div
-      className={`flex h-36 w-72 cursor-pointer flex-col justify-start gap-5 rounded-md border p-2 shadow-md hover:shadow-lg ${
+      className={`flex h-36 w-72 cursor-pointer flex-col justify-start gap-5 rounded-2xl border p-2 shadow-md ${
         isOverdue ? "border-red-300 bg-red-50" : "border-lime-400 bg-lime-50"
       }`}
       onClick={(e) => toggleController(e)}

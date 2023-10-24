@@ -3,6 +3,7 @@ import { clerkClient } from "@clerk/nextjs";
 import { ChoreComplete } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import dayjs from "dayjs";
 
 import {
   createTRPCRouter,
@@ -21,24 +22,39 @@ const completeStatuses = (
     return choreCompletes
       .map((choreComplete, i, completes) => {
         const previousComplete = completes[i + 1];
+        const choreCompletedAt = dayjs(choreComplete.completedAt);
         if (!previousComplete) {
-          const intervalStart = Date.now() - interval * 86400000;
-          if (choreComplete.completedAt.getTime() > intervalStart) {
-            return "completedInTime";
+          const intervalStart = dayjs().subtract(interval, "day");        
+          if (choreCompletedAt.isAfter(intervalStart)) {
+            return {
+              completedAt: choreComplete.completedAt,
+              completedInTime: true
+            }
           }
-          return "notCompletedInTime";
+          return {
+            completedAt: choreComplete.completedAt,
+            completedInTime: false
+          }
         }
-        const intervalStart =
-          previousComplete.completedAt.getTime() - interval * 86400000;
-        if (choreComplete.completedAt.getTime() > intervalStart) {
-          return "completedInTime";
+        const intervalStart = dayjs(previousComplete.completedAt).subtract(interval, "day");
+        if (choreCompletedAt.isAfter(intervalStart)) {
+          return {
+            completedAt: choreComplete.completedAt,
+            completedInTime: true
+          }
         }
-        return "notCompletedInTime";
+        return {
+          completedAt: choreComplete.completedAt,
+          completedInTime: false
+        }
       })
       .reverse();
   };
   
-type CompleteStatus = "completedInTime" | "notCompletedInTime"
+type CompleteStatus = {
+  completedAt: Date;
+  completedInTime: boolean
+}
 
 export const choresRouter = createTRPCRouter({
   getChoresWithLatestComplete: privateProcedure.query(async ({ctx}) => {
@@ -70,7 +86,13 @@ export const choresRouter = createTRPCRouter({
 
    return choresWithSortedChoreCompletes.map(chore => {
         const choreCompletes = completeStatuses(chore.chore.interval, chore.chore.choreCompletes);
-        const isOverdue = choreCompletes[choreCompletes.length - 1] === "notCompletedInTime" ? true : false
+        // const isOverdue = choreCompletes[choreCompletes.length - 1] === "notCompletedInTime" ? true : false
+        const latestComplete = choreCompletes[choreCompletes.length - 1];
+        if (!latestComplete) {
+          const isOverdue = dayjs().isAfter(dayjs(chore.chore.createdAt).add(chore.chore.interval, "day"));
+          return {...chore.chore, choreCompletes: choreCompletes, isOverdue: isOverdue}
+        }
+        const isOverdue = dayjs().isAfter(dayjs(latestComplete.completedAt).add(chore.chore.interval, "day"));
         return {...chore.chore, choreCompletes: choreCompletes, isOverdue: isOverdue}
    });
   }),

@@ -4,12 +4,14 @@ import { CompleteStatusesView } from "./completestatusesview";
 import { useState } from "react";
 import { ChoreEditView } from "./choreeditview";
 import alarmClock from "../../public/alarm-clock.svg";
+
 type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
 
 export const ChoreView = (props: ChoreWithUser) => {
   const { title, interval, choreCompletes, isOverdue } = props;
   const [showController, setShowController] = useState(false);
+
   const toggleController = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
@@ -26,7 +28,7 @@ export const ChoreView = (props: ChoreWithUser) => {
       }`}
       onClick={(e) => toggleController(e)}
     >
-      <h1 className="text-lg font-semibold">{title}</h1>
+      <h1 className="text-lg font-semibold">{title} </h1>
       <div className="flex w-36 items-center justify-start gap-1">
         <Image
           className="h-8 w-8"

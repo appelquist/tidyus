@@ -13,7 +13,7 @@ export const CompleteStatusesView = ({ statuses }: Props) => {
       <div
         key={i}
         className={`mr-2 h-6 w-6 rounded-full border ${
-          status === "completedInTime"
+          status.completedInTime
             ? "border-lime-400 bg-lime-200"
             : "border-red-300 bg-red-200"
         }`}

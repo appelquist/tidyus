@@ -39,7 +39,9 @@ export default function Home() {
           >
             +
           </button>
-          {showChoreWizard && <ChoreWizard />}
+          {showChoreWizard && (
+            <ChoreWizard setShowChoreWizard={setShowChoreWizard} />
+          )}
           <Footer />
         </div>
       </main>

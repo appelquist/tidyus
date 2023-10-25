@@ -19,7 +19,13 @@ export const ChoreView = (props: ChoreWithUser) => {
     setShowController(!showController);
   };
   if (showController) {
-    return <ChoreEditView chore={props} toggleController={toggleController} />;
+    return (
+      <ChoreEditView
+        chore={props}
+        toggleController={toggleController}
+        setShowController={setShowController}
+      />
+    );
   }
   return (
     <div

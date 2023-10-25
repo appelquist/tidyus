@@ -2,8 +2,20 @@ import { useState } from "react";
 import { api } from "~/utils/api";
 import { LoadingSpinner } from "./loading";
 
-export const ChoreWizard = () => {
-  const { mutate, isLoading } = api.chores.createChore.useMutation();
+type Props = {
+  setShowChoreWizard: (show: boolean) => void;
+};
+
+export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
+  const ctx = api.useContext();
+  const { mutate, isLoading } = api.chores.createChore.useMutation({
+    onSuccess: () => {
+      setTitle("");
+      setInterval(0);
+      void ctx.chores.getChoresWithLatestComplete.invalidate();
+      setShowChoreWizard(false);
+    },
+  });
   const [title, setTitle] = useState("");
   const [interval, setInterval] = useState(0);
 
@@ -40,6 +52,7 @@ export const ChoreWizard = () => {
           placeholder="Chore title..."
           value={title}
           onChange={(e) => handleChange(e)}
+          disabled={isLoading}
         />
       </div>
       <div className="flex flex-col items-start p-2">
@@ -52,11 +65,13 @@ export const ChoreWizard = () => {
           type="text"
           value={interval}
           onChange={(e) => handleChange(e)}
+          disabled={isLoading}
         />
       </div>
       <button
         type="submit"
         className="flex h-12 w-24 items-center justify-center rounded-xl bg-emerald-200 pb-0.5 text-2xl shadow-md"
+        disabled={isLoading}
       >
         {isLoading ? <LoadingSpinner size={6} /> : "+"}
       </button>

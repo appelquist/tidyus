@@ -10,10 +10,21 @@ type ChoreWithUser =
 type Props = {
   chore: ChoreWithUser;
   toggleController: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  setShowController: (show: boolean) => void;
 };
-export const ChoreEditView = ({ chore, toggleController }: Props) => {
+export const ChoreEditView = ({
+  chore,
+  toggleController,
+  setShowController,
+}: Props) => {
+  const ctx = api.useContext();
   const { isOverdue, title, id } = chore;
-  const { mutate, isLoading } = api.chores.createChoreComplete.useMutation();
+  const { mutate, isLoading } = api.chores.createChoreComplete.useMutation({
+    onSuccess: () => {
+      void ctx.chores.getChoresWithLatestComplete.invalidate();
+      setShowController(false);
+    },
+  });
   const handleChoreComplete = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {

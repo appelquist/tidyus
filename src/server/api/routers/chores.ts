@@ -49,6 +49,7 @@ const completeStatuses = (
         }
       })
       .reverse();
+      //TODO: Change order in query and tweak this function
   };
   
 type CompleteStatus = {
@@ -61,8 +62,12 @@ export const choresRouter = createTRPCRouter({
     const choresWithLatestComplete = await ctx.prisma.chore.findMany({where:{
       createdBy: ctx.userId
     },include: {
-        choreCompletes: true,
-    },});
+      choreCompletes: {
+        orderBy: {
+          completedAt: "desc"
+        }
+      }
+    }});
     const users = (await clerkClient.users.getUserList({
         userId: choresWithLatestComplete.map((chore) => chore.createdBy),
         limit: 100,
@@ -75,16 +80,9 @@ export const choresRouter = createTRPCRouter({
             chore,
             createdBy: user
         }
-    })
+    });
 
-   const choresWithSortedChoreCompletes = choresForUser.map((chore) => {
-    chore.chore.choreCompletes.sort((a,b) => {
-        return b.completedAt.getTime() - a.completedAt.getTime();
-    })
-    return chore;
-   });
-
-   return choresWithSortedChoreCompletes.map(chore => {
+   return choresForUser.map(chore => {
         const choreCompletes = completeStatuses(chore.chore.interval, chore.chore.choreCompletes);
         // const isOverdue = choreCompletes[choreCompletes.length - 1] === "notCompletedInTime" ? true : false
         const latestComplete = choreCompletes[choreCompletes.length - 1];

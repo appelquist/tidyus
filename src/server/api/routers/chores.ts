@@ -4,16 +4,24 @@ import { ChoreComplete } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import dayjs from "dayjs";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis/nodejs";
 
 import {
   createTRPCRouter,
   privateProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 
 const filterUserForClient = (user: User) => {
     return {id: user.id, username: user.username, profileImageUrl: user.imageUrl}
 }
+
+// Create a new ratelimiter, that allows 10 requests per 1 minute
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+  analytics: true
+})
 
 const completeStatuses = (
     interval: number,
@@ -98,6 +106,10 @@ export const choresRouter = createTRPCRouter({
     choreId: z.string().min(1).max(255)
   })).mutation(async ({ctx, input}) => {
     const userId =  ctx.userId;
+
+    const { success } = await ratelimit.limit(userId);
+
+    if (!success) throw new TRPCError({code: "TOO_MANY_REQUESTS"});
     const choreComplete = ctx.prisma.choreComplete.create({
       data: {
         completedBy: userId,
@@ -112,6 +124,9 @@ export const choresRouter = createTRPCRouter({
 
   })).mutation(async ({ctx, input}) => {
     const userId =  ctx.userId;
+    const { success } = await ratelimit.limit(userId);
+
+    if (!success) throw new TRPCError({code: "TOO_MANY_REQUESTS"});
     const chore = ctx.prisma.chore.create({
       data: {
         title: input.title,

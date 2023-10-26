@@ -3,6 +3,7 @@ import Image from "next/image";
 import checkSvg from "../../public/check.svg";
 import pencilSvg from "../../public/pencil.svg";
 import { LoadingSpinner } from "./loading";
+import toast from "react-hot-toast";
 
 type ChoreWithUser =
   RouterOutputs["chores"]["getChoresWithLatestComplete"][number];
@@ -23,6 +24,14 @@ export const ChoreEditView = ({
     onSuccess: () => {
       void ctx.chores.getChoresWithLatestComplete.invalidate();
       setShowController(false);
+    },
+    onError: (e) => {
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage?.[0]) {
+        toast.error(errorMessage[0]);
+      } else {
+        toast.error("Failed to complete chore!");
+      }
     },
   });
   const handleChoreComplete = (

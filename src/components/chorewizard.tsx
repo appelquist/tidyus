@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "~/utils/api";
 import { LoadingSpinner } from "./loading";
+import toast from "react-hot-toast";
 
 type Props = {
   setShowChoreWizard: (show: boolean) => void;
@@ -14,6 +15,18 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
       setInterval(0);
       void ctx.chores.getChoresWithLatestComplete.invalidate();
       setShowChoreWizard(false);
+    },
+    onError: (e) => {
+      const intervalErrorMessage = e.data?.zodError?.fieldErrors.interval;
+      const titleErrorMessage = e.data?.zodError?.fieldErrors.title;
+      if (intervalErrorMessage?.[0]) {
+        toast.error(intervalErrorMessage[0]);
+      }
+      if (titleErrorMessage?.[0]) {
+        toast.error(titleErrorMessage[0]);
+      } else {
+        toast.error("Failed to create chore!");
+      }
     },
   });
   const [title, setTitle] = useState("");

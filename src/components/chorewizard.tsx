@@ -47,8 +47,8 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
     if (!titleRef?.current) {
       return;
     }
-    //TODO: Research this linting error
-    mutate({ title: titleRef.current.value, interval });
+    const current = titleRef.current as HTMLInputElement;
+    mutate({ title: current.value, interval });
   };
 
   return (

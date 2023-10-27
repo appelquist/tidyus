@@ -8,6 +8,8 @@ type Props = {
 };
 
 export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
+  const titleRef = useRef(null);
+  const [interval, setInterval] = useState(0);
   const ctx = api.useContext();
   const { mutate, isLoading } = api.chores.createChore.useMutation({
     onSuccess: () => {
@@ -28,8 +30,6 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
       }
     },
   });
-  const titleRef = useRef(null);
-  const [interval, setInterval] = useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.id === "interval") {

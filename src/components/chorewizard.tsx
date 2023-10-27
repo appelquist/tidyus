@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "~/utils/api";
 import { LoadingSpinner } from "./loading";
 import toast from "react-hot-toast";
@@ -11,7 +11,6 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
   const ctx = api.useContext();
   const { mutate, isLoading } = api.chores.createChore.useMutation({
     onSuccess: () => {
-      setTitle("");
       setInterval(0);
       void ctx.chores.getChoresWithLatestComplete.invalidate();
       setShowChoreWizard(false);
@@ -29,11 +28,10 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
       }
     },
   });
-  const [title, setTitle] = useState("");
+  const titleRef = useRef(null);
   const [interval, setInterval] = useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.id === "choreTitle") setTitle(e.target.value);
     if (e.target.id === "interval") {
       const input = parseInt(e.target.value);
       if (isNaN(input)) {
@@ -46,7 +44,11 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    mutate({ title, interval });
+    if (!titleRef?.current) {
+      return;
+    }
+    //TODO: Research this linting error
+    mutate({ title: titleRef.current.value, interval });
   };
 
   return (
@@ -63,9 +65,9 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
           className="w-full  rounded-lg p-1 outline-none"
           type="text"
           placeholder="Chore title..."
-          value={title}
-          onChange={(e) => handleChange(e)}
+          ref={titleRef}
           disabled={isLoading}
+          required
         />
       </div>
       <div className="flex flex-col items-start p-2">
@@ -79,6 +81,7 @@ export const ChoreWizard = ({ setShowChoreWizard }: Props) => {
           value={interval}
           onChange={(e) => handleChange(e)}
           disabled={isLoading}
+          required
         />
       </div>
       <button

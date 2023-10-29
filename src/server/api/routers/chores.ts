@@ -135,5 +135,16 @@ export const choresRouter = createTRPCRouter({
       }
     })
     return chore;
+  }),
+  deleteChore: privateProcedure.input(z.object({choreId: z.string().min(1).max(100)})).mutation(async ({ctx, input}) => {
+    const userId = ctx.userId;
+    const {success} = await ratelimit.limit(userId);
+    if (!success) throw new TRPCError({code: "TOO_MANY_REQUESTS"});
+    const chore = await ctx.prisma.chore.delete({
+      where: {
+        id: input.choreId
+      }
+    });
+    return chore;
   })
 });

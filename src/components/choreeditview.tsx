@@ -2,6 +2,7 @@ import { RouterOutputs, api } from "~/utils/api";
 import Image from "next/image";
 import checkSvg from "../../public/check.svg";
 import pencilSvg from "../../public/pencil.svg";
+import deleteSvg from "../../public/trash.svg";
 import { LoadingSpinner } from "./loading";
 import toast from "react-hot-toast";
 
@@ -20,25 +21,47 @@ export const ChoreEditView = ({
 }: Props) => {
   const ctx = api.useContext();
   const { isOverdue, title, id } = chore;
-  const { mutate, isLoading } = api.chores.createChoreComplete.useMutation({
-    onSuccess: () => {
-      void ctx.chores.getChoresWithLatestComplete.invalidate();
-      setShowController(false);
-    },
-    onError: (e) => {
-      const errorMessage = e.data?.zodError?.fieldErrors.content;
-      if (errorMessage?.[0]) {
-        toast.error(errorMessage[0]);
-      } else {
-        toast.error("Failed to complete chore!");
-      }
-    },
-  });
+  const { mutate: completeChore, isLoading: isLoadingComplete } =
+    api.chores.createChoreComplete.useMutation({
+      onSuccess: () => {
+        void ctx.chores.getChoresWithLatestComplete.invalidate();
+        setShowController(false);
+      },
+      onError: (e) => {
+        const errorMessage = e.data?.zodError?.fieldErrors.content;
+        if (errorMessage?.[0]) {
+          toast.error(errorMessage[0]);
+        } else {
+          toast.error("Failed to complete chore!");
+        }
+      },
+    });
+  const { mutate: deleteChore, isLoading: isLoadingDelete } =
+    api.chores.deleteChore.useMutation({
+      onSuccess: () => {
+        void ctx.chores.getChoresWithLatestComplete.invalidate();
+        setShowController(false);
+      },
+      onError: (e) => {
+        const errorMessage = e.data?.zodError?.fieldErrors.content;
+        if (errorMessage?.[0]) {
+          toast.error(errorMessage[0]);
+        } else {
+          toast.error("Failed to delete chore!");
+        }
+      },
+    });
   const handleChoreComplete = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
     e.stopPropagation();
-    mutate({ choreId: id });
+    completeChore({ choreId: id });
+  };
+  const handleChoreDelete = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    e.stopPropagation();
+    deleteChore({ choreId: id });
   };
   return (
     <div
@@ -53,7 +76,7 @@ export const ChoreEditView = ({
           onClick={(e) => handleChoreComplete(e)}
           className="flex w-36 items-center justify-center"
         >
-          {isLoading ? (
+          {isLoadingComplete ? (
             <LoadingSpinner size={8} />
           ) : (
             <Image
@@ -69,6 +92,20 @@ export const ChoreEditView = ({
             src={pencilSvg as string}
             alt="Edit chore logo"
           />
+        </div>
+        <div
+          className="flex w-36 items-center justify-center"
+          onClick={(e) => handleChoreDelete(e)}
+        >
+          {isLoadingDelete ? (
+            <LoadingSpinner size={8} />
+          ) : (
+            <Image
+              className="h-12 w-12"
+              src={deleteSvg as string}
+              alt="Delete chore logo"
+            />
+          )}
         </div>
       </div>
     </div>
